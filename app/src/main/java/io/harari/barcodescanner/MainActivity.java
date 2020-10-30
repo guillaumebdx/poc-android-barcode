@@ -1,5 +1,4 @@
 package io.harari.barcodescanner;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -22,22 +21,25 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
+
     private SurfaceView surfaceView;
     private BarcodeDetector barcodeDetector;
     private CameraSource cameraSource;
     private static final int REQUEST_CAMERA_PERMISSION = 201;
-    //This class provides methods to play DTMF tones
     private ToneGenerator toneGen1;
     private TextView barcodeText;
     private String barcodeData;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC,     100);
+        toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
         surfaceView = findViewById(R.id.surface_view);
         barcodeText = findViewById(R.id.barcode_text);
+        initialiseDetectorsAndSources();
     }
 
     private void initialiseDetectorsAndSources() {
@@ -118,4 +120,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        getSupportActionBar().hide();
+        cameraSource.release();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getSupportActionBar().hide();
+        initialiseDetectorsAndSources();
+    }
+
 }
