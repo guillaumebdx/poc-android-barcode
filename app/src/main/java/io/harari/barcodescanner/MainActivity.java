@@ -12,12 +12,22 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.TextView;
 
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONArrayRequestListener;
+import com.androidnetworking.interfaces.StringRequestListener;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,8 +40,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView barcodeText;
     private String barcodeData;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
         surfaceView = findViewById(R.id.surface_view);
         barcodeText = findViewById(R.id.barcode_text);
+        AndroidNetworking.initialize(getApplicationContext());
         initialiseDetectorsAndSources();
     }
 
@@ -107,11 +116,33 @@ public class MainActivity extends AppCompatActivity {
                                 barcodeText.setText(barcodeData);
                                 toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP, 150);
                             } else {
-
                                 barcodeData = barcodes.valueAt(0).displayValue;
-                                barcodeText.setText(barcodeData);
                                 toneGen1.startTone(ToneGenerator.TONE_CDMA_PIP, 150);
+                                AndroidNetworking.get("http://192.168.0.13:8000/food/select/" + barcodeData)
+                                        .setUserAgent("MonFrigo - Android - Version 1.0 - https://harari.io")
+                                        .build()
+                                        .getAsString(new StringRequestListener() {
+                                            @Override
+                                            public void onResponse(String response) {
+                                                JSONObject jsonObject = null;
+                                                try {
+                                                    jsonObject = new JSONObject(response);
+                                                    String productName = jsonObject.getString("name");
+                                                    String imageUrl = jsonObject.getString("image");
+                                                    barcodeText.setText(productName);
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                    barcodeText.setText(e.getMessage());
+                                                }
 
+
+                                            }
+                                            @Override
+                                            public void onError(ANError error) {
+                                                barcodeText.setText(error.getMessage());
+                                                System.out.println(error.getMessage());
+                                            }
+                                        });
                             }
                         }
                     });
