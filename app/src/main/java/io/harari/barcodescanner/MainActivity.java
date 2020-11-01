@@ -10,7 +10,12 @@ import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
@@ -27,6 +32,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -39,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private ToneGenerator toneGen1;
     private TextView barcodeText;
     private String barcodeData;
+    private Button buttonAdd;
+    private DatePicker mDatePicker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
         toneGen1 = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
         surfaceView = findViewById(R.id.surface_view);
         barcodeText = findViewById(R.id.barcode_text);
+        mDatePicker = findViewById(R.id.date_picker);
+        buttonAdd = findViewById(R.id.button_add);
         AndroidNetworking.initialize(getApplicationContext());
         initialiseDetectorsAndSources();
     }
@@ -109,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void run() {
-
                             if (barcodes.valueAt(0).email != null) {
                                 barcodeText.removeCallbacks(null);
                                 barcodeData = barcodes.valueAt(0).email.address;
@@ -153,6 +166,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void addProduct(View view) {
+        String productName = barcodeText.getText().toString();
+        Date productDateUtil = getDateFromDatePicker(mDatePicker);
+        String productDate = new SimpleDateFormat("yyyy-MM-dd").format(productDateUtil);
+        String sentence = "";
+        if (!productName.equals("Scan un produit")) {
+            sentence = "bien ajouté dans le frigo";
+        }
+        Toast.makeText(getApplicationContext(), productName + " " + sentence, Toast.LENGTH_SHORT).show();
+       // barcodeText.setText("Scan un produit");
+    }
+    /**
+     *
+     * @param datePicker
+     * @return a java.util.Date
+     */
+    public static java.util.Date getDateFromDatePicker(DatePicker datePicker){
+        int day = datePicker.getDayOfMonth();
+        int month = datePicker.getMonth();
+        int year =  datePicker.getYear();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month, day);
+
+        return calendar.getTime();
+    }
     @Override
     protected void onPause() {
         super.onPause();
